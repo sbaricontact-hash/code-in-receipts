@@ -30,12 +30,44 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# environment files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+
+# allow safe example env files
+!.env.example
+!.env.sample
+
+# local signer keys / wallets
+.keys/
+*.keypair.json
+*-signer.json
+*-signer.pub.txt
+
+# local sqlite database files
+data/*.sqlite
+data/*.sqlite3
+data/*.db
+data/*.sqlite-shm
+data/*.sqlite-wal
+data/*.db-shm
+data/*.db-wal
+
+# keep data folder placeholder if needed
+!data/.gitkeep
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+
+# OS / editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/

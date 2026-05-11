@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Code-In Receipts for Web Apps
 
-## Getting Started
+Thin adoption starter for IQ Labs Code-In on Solana devnet using Next.js App Router.
 
-First, run the development server:
+This is **not** a competing SDK. It is a small integration layer that:
+- validates canonical receipt payloads with Zod,
+- writes proof through a swappable Code-In adapter,
+- stores a local SQLite index for verification pages.
+
+## Stack
+
+- Next.js App Router + TypeScript + Tailwind
+- SQLite via `better-sqlite3`
+- Solana devnet via `@solana/web3.js`
+- Validation via `zod`
+
+## Environment Setup
+
+Copy `.env.example` to `.env.local` and set values:
+
+```bash
+cp .env.example .env.local
+```
+
+Required vars:
+- `SOLANA_RPC_URL` (or `CODEIN_RPC_URL`): devnet RPC endpoint
+- Signer: set **`SOLANA_SIGNER_SECRET_KEY`** (JSON byte array) **or** **`SOLANA_SIGNER_SECRET_KEY_BASE58`** (base58). If both are set, the JSON variable wins when it is non-empty.
+- Optional aliases for Dear Future compatibility:
+  - `CODEIN_SOLANA_NETWORK` as alias for `CODEIN_NETWORK`
+  - `CODEIN_SIGNER_PRIVATE_KEY` as alias for `SOLANA_SIGNER_SECRET_KEY_BASE58`
+- `DATABASE_PATH`: defaults to `./data/code-in-receipts.sqlite`
+
+### Solana keys (devnet)
+
+- **Public key / address** — this is where you send devnet SOL (airdrops, funding). It is safe to share for receiving funds.
+- **Secret key** — what the app uses to sign transactions. Treat it like a password.
+- You may store the secret as a **JSON array of bytes** (`SOLANA_SIGNER_SECRET_KEY`) or a **base58-encoded** string (`SOLANA_SIGNER_SECRET_KEY_BASE58`).
+- **Never** commit `.env.local`, real keys in `.env`, or files under `.keys/` to version control.
+
+## Install
+
+```bash
+npm install
+```
+
+Install IQ Labs Solana SDK:
+
+```bash
+npm install @iqlabs-official/solana-sdk
+```
+
+## SDK status
+
+This starter uses **`@iqlabs-official/solana-sdk`** (IQ Labs Solana SDK) for the real Code-In write path: `writer.codeIn` plus `reader.readCodeIn` for a post-write round-trip check.
+
+The legacy **`iq-sdk`** package (`github:IQ6900/code_in_sdk`) is **not** used.
+
+If the real SDK path throws (RPC, signer, or API errors), the adapter falls back to **`DEVNET_MEMO_FALLBACK_NOT_CODEIN`** — a plain devnet memo transaction for benchmarking signing and confirmation only. That path is **not** IQ Code-In storage.
+
+## Adapter Behavior
+
+`RealCodeInAdapter` attempts real Code-In mode first via `@iqlabs-official/solana-sdk` (`writer.codeIn` with signer/connection context, then `setRpcUrl` + `reader.readCodeIn` for round-trip check).
+
+If that fails due to runtime API/environment issues, it safely falls back to `DEVNET_MEMO_FALLBACK_NOT_CODEIN` for a real devnet signer/RPC benchmark transaction.
+
+The memo fallback is **not** actual Code-In storage.
+
+## Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000` and go to `/demo`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run signer:address` - print signer public key only (no secrets)
+- `npm run signer:airdrop` - request 1 SOL devnet airdrop
+- `npm run smoke:receipt` - create a receipt via backend function and print tx/explorer link
+- `npm run lint` - run ESLint
 
-## Learn More
+## Verified devnet smoke test
 
-To learn more about Next.js, take a look at the following resources:
+When the real IQ Code-In path succeeds (see `lib/codein/real-codein-adapter.ts`), server logs should include:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+[RealCodeInAdapter] REAL_IQ_CODEIN_PATH active
+[RealCodeInAdapter] REAL_IQ_CODEIN_PATH succeeded
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Run `npm run smoke:receipt` (with `.env.local` and funded devnet signer) to confirm end-to-end.
 
-## Deploy on Vercel
+## API
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### `POST /api/receipts/create`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Accepts:
+
+```json
+{
+  "appId": "my-app",
+  "type": "payment_receipt",
+  "reference": "order-123",
+  "payloadHash": "abc123...",
+  "privacyMode": "hash_only",
+  "metadata": {
+    "foo": "bar"
+  }
+}
+```
+
+Returns:
+
+```json
+{
+  "ok": true,
+  "receiptId": "...",
+  "receipt": {},
+  "codeIn": {
+    "codeInRecordId": "...",
+    "txSignature": "...",
+    "gatewayUrl": null,
+    "status": "confirmed"
+  },
+  "verifyUrl": "http://localhost:3000/verify/..."
+}
+```
+
+### `GET /api/receipts/verify/[receiptId]`
+
+Returns stored receipt + write result from SQLite index.
+
+## Privacy Warning
+
+This starter defaults to `hash_only`, but it still sends proof data to devnet. Do not store plaintext secrets or regulated PII in chain-bound payloads. Keep signer keys server-side and never log private key material.
