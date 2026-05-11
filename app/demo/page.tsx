@@ -94,7 +94,7 @@ export default function DemoPage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-6 py-16">
       <div>
-        <h1 className="text-3xl font-bold">Receipt demo</h1>
+        <h1 className="text-3xl font-bold">Code-In Receipt demo (IQ Labs)</h1>
         <p className="mt-2 text-black/70">
           This demo stores a local SQLite index and writes the receipt proof to IQ Code-In on
           Solana devnet.
