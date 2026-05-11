@@ -73,5 +73,22 @@ export function ReceiptMetadataSummary({ receipt }: { receipt: StoredReceipt }) 
     );
   }
 
+  if (type === "publishing_proof") {
+    return (
+      <section className="mt-6 rounded-lg border border-cyan-100 bg-cyan-50/40 p-4">
+        <h3 className="text-sm font-semibold text-cyan-950">Publishing proof summary</h3>
+        <dl className="mt-3 grid gap-3 text-sm">
+          <Row label="Title" value={pick(m, "title")} />
+          <Row label="Publication ID" value={pick(m, "publicationId")} />
+          <Row label="Content type" value={pick(m, "contentType")} />
+          <Row label="Content hash" value={pick(m, "contentHash")} />
+          <Row label="Author data (hashed only)" value={pick(m, "authorRefHash")} />
+          <Row label="Canonical URL (hashed only)" value={pick(m, "canonicalUrlHash")} />
+          <Row label="License" value={pick(m, "license")} />
+        </dl>
+      </section>
+    );
+  }
+
   return null;
 }

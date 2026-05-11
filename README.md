@@ -73,6 +73,17 @@ npm run dev
 
 Open `http://localhost:3000` and go to `/demo`.
 
+### Demo patterns
+
+The `/demo` page exercises the same receipt envelope with different metadata shapes:
+
+- Payment receipt
+- AI provenance
+- Certificate
+- **Decentralized publishing proof** — register and verify a publication commitment without placing private author data or full article text on-chain.
+
+This demonstrates the same primitive expanding from receipts into Web3 internet content proofs.
+
 ## Scripts
 
 - `npm run signer:address` - print signer public key only (no secrets)

@@ -100,8 +100,12 @@ export default function DemoPage() {
           Solana devnet.
         </p>
         <p className="mt-3 text-sm text-black/65">
-          All three receipts use the same Code-In verification envelope, but each demonstrates a
+          All demo receipts use the same Code-In verification envelope, but each demonstrates a
           different application-level proof pattern.
+        </p>
+        <p className="mt-2 text-sm text-black/65">
+          Publishing proofs show how the same Code-In envelope can support decentralized publishing
+          and on-chain content verification.
         </p>
       </div>
 
@@ -119,7 +123,7 @@ export default function DemoPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <button
           type="button"
           onClick={() => trigger("payment_receipt")}
@@ -163,6 +167,21 @@ export default function DemoPage() {
             </span>
           ) : (
             "Create certificate receipt"
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => trigger("publishing_proof")}
+          className="rounded-md border border-black/10 bg-white px-4 py-3 text-left hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={busy}
+        >
+          {isLoading === "publishing_proof" ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              Creating…
+            </span>
+          ) : (
+            "Create Publishing Proof"
           )}
         </button>
       </div>

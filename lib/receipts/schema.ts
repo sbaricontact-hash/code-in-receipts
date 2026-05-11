@@ -4,6 +4,7 @@ export const receiptTypeSchema = z.enum([
   "payment_receipt",
   "certificate",
   "ai_provenance",
+  "publishing_proof",
   "audit_log",
   "message_receipt",
 ]);

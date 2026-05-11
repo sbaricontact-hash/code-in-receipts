@@ -1,4 +1,8 @@
-export type DemoReceiptType = "payment_receipt" | "ai_provenance" | "certificate";
+export type DemoReceiptType =
+  | "payment_receipt"
+  | "ai_provenance"
+  | "certificate"
+  | "publishing_proof";
 
 /** SHA-256 hex (Web Crypto) — safe for demo pages; no Node `crypto`. */
 export async function sha256HexBrowser(message: string): Promise<string> {
@@ -48,6 +52,17 @@ export async function buildDemoMetadata(
         source: "demo_page",
       };
     }
+    case "publishing_proof":
+      return {
+        publicationId: `PUB-DEMO-${runId}`,
+        title: "Synthetic demo essay: decentralized publishing patterns",
+        contentType: "text/markdown",
+        authorRefHash: await sha256HexBrowser(`demo|author_ref|${salt}`),
+        contentHash: await sha256HexBrowser(`demo|publication_body|${salt}`),
+        canonicalUrlHash: await sha256HexBrowser(`demo|canonical_url|${salt}`),
+        license: "CC-BY-4.0 (demo label only)",
+        source: "demo_page",
+      };
   }
 }
 
