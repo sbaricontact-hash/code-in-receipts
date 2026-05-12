@@ -1,112 +1,197 @@
 # Code-In Receipts for Web Apps
 
-Thin adoption starter for IQ Labs Code-In on Solana devnet using Next.js App Router.
+A small Next.js starter showing how web, SaaS and AI apps can create permanent, verifiable receipt proofs using **IQ Code-In** on **Solana devnet**.
 
-This is **not** a competing SDK. It is a small integration layer that:
-- validates canonical receipt payloads with Zod,
-- writes proof through a swappable Code-In adapter,
-- stores a local SQLite index for verification pages.
-
-## Stack
-
-- Next.js App Router + TypeScript + Tailwind
-- SQLite via `better-sqlite3`
-- Solana devnet via `@solana/web3.js`
-- Validation via `zod`
-
-## Environment Setup
-
-Copy `.env.example` to `.env.local` and set values:
+It uses the official IQ Labs SDK:
 
 ```bash
-cp .env.example .env.local
+@iqlabs-official/solana-sdk
 ```
 
-Required vars:
-- `SOLANA_RPC_URL` (or `CODEIN_RPC_URL`): devnet RPC endpoint
-- Signer: set **`SOLANA_SIGNER_SECRET_KEY`** (JSON byte array) **or** **`SOLANA_SIGNER_SECRET_KEY_BASE58`** (base58). If both are set, the JSON variable wins when it is non-empty.
-- Optional aliases for Dear Future compatibility:
-  - `CODEIN_SOLANA_NETWORK` as alias for `CODEIN_NETWORK`
-  - `CODEIN_SIGNER_PRIVATE_KEY` as alias for `SOLANA_SIGNER_SECRET_KEY_BASE58`
-- `DATABASE_PATH`: defaults to `./data/code-in-receipts.sqlite`
+This is not a competing SDK. It is a simple adoption template that shows one reusable pattern:
 
-### Solana keys (devnet)
+```txt
+App event happens
+  ↓
+Create a hash-only proof payload
+  ↓
+Write the proof to IQ Code-In
+  ↓
+Store a local receipt index
+  ↓
+Show a public verification page
+```
 
-- **Public key / address** — this is where you send devnet SOL (airdrops, funding). It is safe to share for receiving funds.
-- **Secret key** — what the app uses to sign transactions. Treat it like a password.
-- You may store the secret as a **JSON array of bytes** (`SOLANA_SIGNER_SECRET_KEY`) or a **base58-encoded** string (`SOLANA_SIGNER_SECRET_KEY_BASE58`).
-- **Never** commit `.env.local`, real keys in `.env`, or files under `.keys/` to version control.
+---
 
-## Install
+## What this demo includes
+
+- Next.js App Router
+- Real IQ Code-In writes on Solana devnet
+- Local SQLite receipt index
+- Public verification pages
+- Hash-only privacy-safe defaults
+- Four demo proof patterns:
+  - Payment receipt
+  - AI provenance
+  - Certificate receipt
+  - Decentralized publishing proof
+
+---
+
+## Quick start
+
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-Install IQ Labs Solana SDK:
+### 2. Create your environment file
 
 ```bash
-npm install @iqlabs-official/solana-sdk
+cp .env.example .env.local
 ```
 
-## SDK status
+On Windows PowerShell:
 
-This starter uses **`@iqlabs-official/solana-sdk`** (IQ Labs Solana SDK) for the real Code-In write path: `writer.codeIn` plus `reader.readCodeIn` for a post-write round-trip check.
+```powershell
+copy .env.example .env.local
+```
 
-The legacy **`iq-sdk`** package (`github:IQ6900/code_in_sdk`) is **not** used.
+### 3. Add your devnet signer
 
-If the real SDK path throws (RPC, signer, or API errors), the adapter falls back to **`DEVNET_MEMO_FALLBACK_NOT_CODEIN`** — a plain devnet memo transaction for benchmarking signing and confirmation only. That path is **not** IQ Code-In storage.
+Create or use a **devnet-only** Solana keypair.
 
-## Adapter Behavior
+Add one of these to `.env.local`:
 
-`RealCodeInAdapter` attempts real Code-In mode first via `@iqlabs-official/solana-sdk` (`writer.codeIn` with signer/connection context, then `setRpcUrl` + `reader.readCodeIn` for round-trip check).
+```env
+SOLANA_SIGNER_SECRET_KEY=[1,2,3,...]
+```
 
-If that fails due to runtime API/environment issues, it safely falls back to `DEVNET_MEMO_FALLBACK_NOT_CODEIN` for a real devnet signer/RPC benchmark transaction.
+or:
 
-The memo fallback is **not** actual Code-In storage.
+```env
+SOLANA_SIGNER_SECRET_KEY_BASE58=your_base58_private_key
+```
 
-## Run
+Your `.env.local` should look roughly like this:
+
+```env
+CODEIN_NETWORK=devnet
+SOLANA_RPC_URL=https://api.devnet.solana.com
+CODEIN_MODE=real
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+DATABASE_PATH=./data/code-in-receipts.sqlite
+
+SOLANA_SIGNER_SECRET_KEY=
+SOLANA_SIGNER_SECRET_KEY_BASE58=
+```
+
+Fund the signer public key with a small amount of devnet SOL.
+
+You can print the signer address with:
+
+```bash
+npm run signer:address
+```
+
+---
+
+## Run the demo
 
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:3000` and go to `/demo`.
+Open:
 
-### Demo patterns
-
-The `/demo` page exercises the same receipt envelope with different metadata shapes:
-
-- Payment receipt
-- AI provenance
-- Certificate
-- **Decentralized publishing proof** — register and verify a publication commitment without placing private author data or full article text on-chain.
-
-This demonstrates the same primitive expanding from receipts into Web3 internet content proofs.
-
-## Scripts
-
-- `npm run signer:address` - print signer public key only (no secrets)
-- `npm run signer:airdrop` - request 1 SOL devnet airdrop
-- `npm run smoke:receipt` - create a receipt via backend function and print tx/explorer link
-- `npm run lint` - run ESLint
-
-## Verified devnet smoke test
-
-When the real IQ Code-In path succeeds (see `lib/codein/real-codein-adapter.ts`), server logs should include:
-
+```txt
+http://localhost:3000/demo
 ```
+
+Click one of the demo buttons:
+
+- Create payment receipt
+- Create AI provenance receipt
+- Create certificate receipt
+- Create publishing proof
+
+Each button creates a real IQ Code-In devnet record and gives you a verification page.
+
+---
+
+## Verify it works
+
+Run:
+
+```bash
+npm run smoke:receipt
+```
+
+A successful real Code-In write should show:
+
+```txt
 [RealCodeInAdapter] REAL_IQ_CODEIN_PATH active
 [RealCodeInAdapter] REAL_IQ_CODEIN_PATH succeeded
 ```
 
-Run `npm run smoke:receipt` (with `.env.local` and funded devnet signer) to confirm end-to-end.
+You should also see:
+
+```txt
+receiptId: ...
+txSignature: ...
+explorer: https://explorer.solana.com/tx/...?cluster=devnet
+```
+
+---
+
+## Demo proof patterns
+
+The starter uses one shared receipt envelope:
+
+```ts
+{
+  version: "1.0",
+  appId: string,
+  type: string,
+  reference: string,
+  createdAt: string,
+  payloadHash: string,
+  privacyMode: "hash_only",
+  metadata: object
+}
+```
+
+Each proof type adds different metadata.
+
+### Payment receipt
+
+Shows how a SaaS app could prove a checkout, order or billing event without storing private customer details on-chain.
+
+### AI provenance
+
+Shows how an AI app could timestamp and verify generated output, prompt hashes or model metadata.
+
+### Certificate receipt
+
+Shows how a course, credential or attestation could be verified publicly without exposing recipient data.
+
+### Decentralized publishing proof
+
+Shows how Code-In can support Web3 internet use cases by registering content commitments, author hashes and publication proofs.
+
+---
 
 ## API
 
-### `POST /api/receipts/create`
+### Create a receipt
 
-Accepts:
+```http
+POST /api/receipts/create
+```
+
+Example body:
 
 ```json
 {
@@ -116,12 +201,14 @@ Accepts:
   "payloadHash": "abc123...",
   "privacyMode": "hash_only",
   "metadata": {
-    "foo": "bar"
+    "productName": "Premium Plan",
+    "amount": "29.99",
+    "currency": "GBP"
   }
 }
 ```
 
-Returns:
+Example response:
 
 ```json
 {
@@ -138,10 +225,75 @@ Returns:
 }
 ```
 
-### `GET /api/receipts/verify/[receiptId]`
+### Verify a receipt
 
-Returns stored receipt + write result from SQLite index.
+```http
+GET /api/receipts/verify/[receiptId]
+```
 
-## Privacy Warning
+Returns the stored receipt and Code-In write result from the local SQLite index.
 
-This starter defaults to `hash_only`, but it still sends proof data to devnet. Do not store plaintext secrets or regulated PII in chain-bound payloads. Keep signer keys server-side and never log private key material.
+---
+
+## Useful scripts
+
+```bash
+npm run signer:address
+```
+
+Prints the signer public key.
+
+```bash
+npm run smoke:receipt
+```
+
+Creates a test receipt and prints the devnet transaction link.
+
+```bash
+npm run lint
+```
+
+Runs ESLint.
+
+```bash
+npx tsc --noEmit
+```
+
+Runs TypeScript checks.
+
+---
+
+## Privacy notes
+
+This starter defaults to:
+
+```txt
+privacyMode: hash_only
+```
+
+That means sensitive source data should stay off-chain. The public Code-In record should contain hashes, references and proof metadata only.
+
+Do not put plaintext secrets, private customer data, personal documents, regulated data or private prompts directly into chain-bound payloads.
+
+Never commit:
+
+```txt
+.env.local
+.keys/
+data/*.sqlite
+```
+
+---
+
+## Project goal
+
+This starter is designed to make the first few minutes with IQ Code-In easier for normal Next.js, SaaS and AI developers.
+
+It starts with receipts because they are easy to understand, but the same proof pattern can expand into:
+
+- permanent profiles
+- decentralized publishing
+- AI memory
+- verifiable SaaS records
+- on-chain app databases
+- Web3 internet content proofs
