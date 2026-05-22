@@ -9,7 +9,8 @@
     "lint": "eslint",
     "signer:address": "tsx scripts/print-signer-address.ts",
     "signer:airdrop": "tsx scripts/airdrop-devnet.ts",
-    "smoke:receipt": "tsx scripts/smoke-create-receipt.ts"
+    "smoke:receipt": "tsx scripts/smoke-create-receipt.ts",
+    "db:check": "tsx scripts/db-check.ts"
   },
   "dependencies": {
     "@iqlabs-official/solana-sdk": "^0.1.21",
@@ -19,6 +20,7 @@
     "lucide-react": "^1.14.0",
     "nanoid": "^5.1.11",
     "next": "16.2.6",
+    "pg": "^8.21.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zod": "^4.4.3"
@@ -27,6 +29,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

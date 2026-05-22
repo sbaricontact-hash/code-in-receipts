@@ -21,7 +21,7 @@ export async function createReceipt(input: CreateReceiptInput) {
 
   const adapter = new RealCodeInAdapter();
   const writeResult = await adapter.writeReceipt(payload);
-  const stored = insertReceipt({ receiptId, payload, writeResult });
+  const stored = await insertReceipt({ receiptId, payload, writeResult });
   return {
     receiptId: stored.id,
     receipt: stored.rawPayload,

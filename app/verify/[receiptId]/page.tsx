@@ -13,7 +13,7 @@ export default async function VerifyPage({
   params: Promise<{ receiptId: string }>;
 }) {
   const { receiptId } = await params;
-  const receipt = verifyReceipt(receiptId);
+  const receipt = await verifyReceipt(receiptId);
   const isMemoFallback = receipt ? isMemoFallbackReceipt(receipt.codeInRecordId) : false;
 
   return (

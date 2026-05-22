@@ -28,7 +28,7 @@ Show a public verification page
 
 - Next.js App Router
 - Real IQ Code-In writes on Solana devnet
-- Local SQLite receipt index
+- Local SQLite receipt index by default (optional Postgres for hosted deployment)
 - Public verification pages
 - Hash-only privacy-safe defaults
 - Four demo proof patterns:
@@ -40,6 +40,8 @@ Show a public verification page
 ---
 
 ## Quick start
+
+About five minutes locally — no external database account required.
 
 ### 1. Install dependencies
 
@@ -82,6 +84,7 @@ CODEIN_NETWORK=devnet
 SOLANA_RPC_URL=https://api.devnet.solana.com
 CODEIN_MODE=real
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+DATABASE_PROVIDER=sqlite
 DATABASE_PATH=./data/code-in-receipts.sqlite
 
 SOLANA_SIGNER_SECRET_KEY=
@@ -231,7 +234,60 @@ Example response:
 GET /api/receipts/verify/[receiptId]
 ```
 
-Returns the stored receipt and Code-In write result from the local SQLite index.
+Returns the stored receipt and Code-In write result from the receipt lookup index.
+
+---
+
+## Why a database is used
+
+**IQ Code-In** stores the permanent proof on Solana.
+
+This app also keeps a small **lookup index** in a database so pages like `/verify/[receiptId]` load quickly without scanning the chain each time. A typical row links:
+
+```txt
+receiptId → txSignature → payloadHash → verification page data
+```
+
+That index is not the source of truth for the proof — the on-chain Code-In record is. You can swap the index layer later (SQLite file, Postgres, or your existing app database).
+
+---
+
+## Database mode
+
+### Local mode (default)
+
+- **SQLite** is the default (`DATABASE_PROVIDER=sqlite`).
+- No external database account is needed.
+- Good for cloning, learning, demos, and local testing.
+- Stores only the receipt lookup index in `./data/code-in-receipts.sqlite`.
+
+### Hosted mode (optional)
+
+- Serverless hosts such as **Vercel** should use a **persistent** database for the index (SQLite on ephemeral filesystems is not reliable in production).
+- This repo includes optional **Postgres** support (`DATABASE_PROVIDER=postgres` + `DATABASE_URL`).
+- **Neon** is one possible Postgres provider — not required. **Supabase**, self-hosted Postgres, or other managed Postgres services work the same way.
+- You can also replace the receipt storage layer with your existing app database (MySQL, Redis, or whatever you already run) by adapting `lib/db/receipts.ts`.
+
+---
+
+## Deploy with a persistent database
+
+When you deploy to Vercel or similar:
+
+1. Keep using SQLite locally — nothing changes for day-to-day development.
+2. For production, point the receipt index at Postgres (included) or your own store:
+   - Set `DATABASE_PROVIDER=postgres`
+   - Set `DATABASE_URL` to a pooled Postgres connection string (Neon, Supabase, etc.)
+3. Keep all signer variables **server-side only**. Never expose private keys to the browser.
+4. Deploy.
+
+The app creates the `receipts` table and indexes on first use when `DATABASE_PROVIDER=postgres`.
+
+Optional check before deploy (does not print connection secrets):
+
+```bash
+DATABASE_PROVIDER=postgres DATABASE_URL="your-connection-string" npm run db:check
+```
 
 ---
 
@@ -248,6 +304,12 @@ npm run smoke:receipt
 ```
 
 Creates a test receipt and prints the devnet transaction link.
+
+```bash
+npm run db:check
+```
+
+Checks which database provider is active and initializes the receipt table/index if needed.
 
 ```bash
 npm run lint

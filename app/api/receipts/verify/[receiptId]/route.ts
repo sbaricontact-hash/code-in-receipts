@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(_request: Request, context: { params: Promise<{ receiptId: string }> }) {
   const { receiptId } = await context.params;
-  const receipt = verifyReceipt(receiptId);
+  const receipt = await verifyReceipt(receiptId);
   if (!receipt) {
     return Response.json({ ok: false, error: "Receipt not found" }, { status: 404 });
   }
